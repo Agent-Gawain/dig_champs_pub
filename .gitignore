@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Vendored deps (built by build_vendor.py — do not commit)
+_vendor/
+*.pyz
+
+# Session data — never commit scan results or credentials
+~/.dc_sessions/
+dc_sessions/
+*.dc_session/
+cred_results.json
+*.done_*
+trajectory*.json
+trajectory*.md
+report_*.json
+report_*.md
+hvf_findings.json
+fuzz_findings.json
+probe_findings.json
+artifact_findings.json
+nmap.txt
+nmap.xml
+session.json
+
+# Loot files
+*.loot
+loot.txt
+creds.txt
+found_creds.txt
+
+# Env / secrets
+.env
+*.key
+*.pem
+*.crt
+*.p12
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
