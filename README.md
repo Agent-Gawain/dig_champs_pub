@@ -2,6 +2,16 @@
 
 Red-team recon and post-exploitation framework. Automated multi-phase attack surface mapping with live adaptive phase sequencing and optional Claude-powered analysis.
 
+
+> ⚠️ **AUTHORIZED USE ONLY**
+>
+> This tool is for **authorized penetration testing and security research only.**
+> You must have explicit written permission from the owner of any system you
+> target before running dig_champs against it.
+>
+> Unauthorized use is illegal. The author accepts no liability for misuse.
+> See [DISCLAIMER.md](./DISCLAIMER.md) and [LICENSE](./LICENSE) for full terms.
+> 
 ---
 
 ## Table of Contents
