@@ -1,0 +1,58 @@
+MIT License with Security Research Disclaimer
+
+Copyright (c) 2026 Danielle Grayson
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-------------------------------------------------------------------------------
+AUTHORIZED USE ONLY — SECURITY RESEARCH DISCLAIMER
+-------------------------------------------------------------------------------
+
+This software is intended exclusively for:
+
+  - Authorized penetration testing and security assessments conducted with
+    explicit written permission from the owner of the target system(s).
+  - Controlled laboratory and CTF (Capture the Flag) environments.
+  - Legitimate security research and education.
+
+BY USING THIS SOFTWARE, YOU AGREE THAT:
+
+  1. You have obtained explicit, written authorization from the owner of any
+     system, network, or infrastructure you target with this tool before
+     running it.
+
+  2. You are solely and entirely responsible for your own actions, and for
+     ensuring your use of this software complies with all applicable local,
+     state, national, and international laws — including but not limited to
+     the Computer Fraud and Abuse Act (CFAA), the UK Computer Misuse Act,
+     and equivalent statutes in your jurisdiction.
+
+  3. Danielle Grayson, the author of this software, expressly disclaims all
+     liability for any unauthorized, illegal, or harmful use of this tool by
+     any party. The existence of this software does not constitute permission,
+     encouragement, or authorization to conduct unauthorized access or attacks
+     against any system.
+
+  4. This tool is a knife. Knives have legitimate uses. Stabbing people is
+     still illegal. The manufacturer of the knife is not responsible for
+     what you do with it.
+
+Unauthorized use of this software against systems you do not own or do not
+have explicit written permission to test is illegal and unethical.
+The author accepts no responsibility for such use.
