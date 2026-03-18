@@ -4228,7 +4228,49 @@ def _phase_sleep(delay: int, label: str):
         time.sleep(delay)
 
 
+def _show_legal_disclaimer() -> bool:
+    """
+    Display a legal disclaimer and require explicit user affirmation to proceed.
+    Returns True if user accepts; exits if user declines.
+    """
+    disclaimer_text = (
+        "LEGAL DISCLAIMER\n\n"
+        "This tool is provided for authorized security testing and penetration testing purposes only. "
+        "You are responsible for ensuring that you have explicit written permission from the target system "
+        "owner(s) before using this tool against any computer system or network.\n\n"
+        "The creators and distributors of this tool are not liable for any illegal, malicious, or "
+        "unauthorized use. Unauthorized access to computer systems is illegal and may result in criminal "
+        "or civil penalties. By using this tool, you assume all responsibility for your actions.\n\n"
+        "Use only on systems you own or have explicit written authorization to test. Misuse of this "
+        "tool may violate international laws including but not limited to the Computer Fraud and Abuse Act (CFAA), "
+        "the UK Computer Misuse Act, and other applicable legislation."
+    )
+
+    console.print(
+        Panel(
+            disclaimer_text,
+            title="[bold red]⚠️  LEGAL NOTICE[/bold red]",
+            border_style="red",
+            expand=True
+        )
+    )
+
+    console.print()
+    response = console.input(
+        "[bold yellow]Do you understand and accept these terms? (type 'yes' to proceed): [/bold yellow]"
+    ).strip().lower()
+
+    if response != "yes":
+        console.print("[red][!] Disclaimer not accepted. Exiting.[/red]")
+        sys.exit(0)
+
+    return True
+
+
 def main():
+    # ── Show legal disclaimer first ────────────────────────────────────────
+    _show_legal_disclaimer()
+
     parser = build_parser()
     args   = parser.parse_args()
 
