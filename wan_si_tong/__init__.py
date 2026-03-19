@@ -3,6 +3,10 @@ wan_si_tong — Library of All Things (万事通)
 ================================================================
 The attack methodology encyclopedia for dig_champs.
 
+Author:           Danielle Grayson
+Created:          2026-03-16
+Last modified:    2026-03-19
+
 Named after the mythological library that contains all knowledge.
 Stores structured attack playbooks, cross-references them against
 live scan findings, and outputs a prioritised methodology list for

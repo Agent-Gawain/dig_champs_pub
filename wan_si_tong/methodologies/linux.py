@@ -1,7 +1,7 @@
 """
 methodologies/linux.py — Linux-specific attack methodologies.
 
-12 entries covering privilege escalation, credential extraction, and
+17 entries covering privilege escalation, credential extraction, and
 post-exploitation vectors specific to Linux/Unix targets.
 
 Registered with os_tags=["linux"] so they only surface when the router

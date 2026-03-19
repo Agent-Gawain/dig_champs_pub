@@ -2,6 +2,10 @@
 """
 dig_champs.py — Full-spectrum recon & post-exploitation CLI
 
+Author:           Danielle Grayson
+Created:          2026-03-16
+Last modified:    2026-03-19
+
 Sections:
   1  Core Utilities        shared helpers, session/resume
   2  Recon Scans           nmap (+IPv6), nikto, whatweb, enum4linux, dnsrecon
@@ -92,6 +96,12 @@ try:
     _WST_AVAILABLE = True
 except ImportError:
     _WST_AVAILABLE = False
+
+try:
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey as _Ed25519PrivateKey  # noqa: F401
+    _CRYPTO_AVAILABLE = True
+except ImportError:
+    _CRYPTO_AVAILABLE = False
 
 
 console = Console()
@@ -3959,7 +3969,7 @@ def build_parser() -> argparse.ArgumentParser:
         epilog="""
 MODES
   1  Ghost   — stealth (-T1, evasion, long delays)
-  2  Sneaky  — quiet  (-T2, moderate delays)
+  2  Ninja   — quiet  (-T2, moderate delays)
   3  YOLO    — normal (-T4)
   4  BOSS    — aggressive (-T5, requires --confirm-boss)
 
@@ -4030,6 +4040,15 @@ EXAMPLES
                    help="Seconds to sleep between scan phases")
     p.add_argument("--resume",                  metavar="PATH",
                    help="Resume from an existing session directory")
+    p.add_argument("--operator-key",            metavar="PATH",
+                   help="Ed25519 operator private key for session signing "
+                        "(or set DIG_CHAMPS_OPERATOR_KEY env var)")
+    p.add_argument("--operator-cert",           metavar="PATH",
+                   help="Operator certificate JSON issued by the authority "
+                        "(or set DIG_CHAMPS_OPERATOR_CERT env var)")
+    p.add_argument("--enterprise-cert",         metavar="PATH",
+                   help="Enterprise authority certificate JSON — required for "
+                        "enterprise-tier operators (or set DIG_CHAMPS_ENTERPRISE_CERT env var)")
     return p
 
 
@@ -4117,16 +4136,132 @@ def _timed_input(prompt: str, default: str = "", timeout: int | None = None) -> 
     return result[0]
 
 
+def _is_network_entry(s: str) -> bool:
+    """Return True if s looks like an IP, CIDR, or hostname (contains no whitespace)."""
+    return bool(s.strip()) and " " not in s.strip()
+
+
+def _scope_contains_target(target: str, entries: list[str]) -> bool:
+    """
+    Return True if target (IP or hostname) is covered by at least one scope entry.
+    Entries may be IPs, CIDR ranges, or hostnames.
+    """
+    target_ip: ipaddress.IPv4Address | ipaddress.IPv6Address | None = None
+    try:
+        target_ip = ipaddress.ip_address(target)
+    except ValueError:
+        try:
+            target_ip = ipaddress.ip_address(socket.gethostbyname(target))
+        except (socket.gaierror, ValueError):
+            pass
+
+    for entry in entries:
+        entry = entry.strip()
+        if not entry:
+            continue
+        # Exact string match
+        if entry.lower() == target.lower():
+            return True
+        # CIDR / network range
+        try:
+            net = ipaddress.ip_network(entry, strict=False)
+            if target_ip is not None and target_ip in net:
+                return True
+        except ValueError:
+            pass
+        # Hostname → resolve and compare IPs
+        try:
+            entry_ip = ipaddress.ip_address(socket.gethostbyname(entry))
+            if target_ip is not None and entry_ip == target_ip:
+                return True
+        except (socket.gaierror, ValueError):
+            pass
+
+    return False
+
+
+def _confirm_scope(target: str) -> str:
+    """
+    Require the operator to declare and confirm their authorized testing scope.
+    Validates the target against any CIDRs or hostnames provided.
+    Returns the raw scope declaration string for logging.
+    AFK mode does NOT bypass this step.
+    """
+    console.print(
+        Panel(
+            f"Target: [bold cyan]{target}[/bold cyan]\n\n"
+            "Declare the authorized scope for this engagement.\n\n"
+            "You may enter a comma-separated list of CIDRs, IP addresses, or hostnames — "
+            "the target will be automatically validated against them.\n"
+            "Or enter a free-text description of your written authorization "
+            "(you will then be asked to confirm explicitly).\n\n"
+            "[dim]Examples:\n"
+            "  10.0.1.0/24, 192.168.5.10\n"
+            "  target.example.com, 10.10.0.0/16\n"
+            "  Authorized by written agreement dated 2026-03-15 — all systems at example.com[/dim]",
+            title="[bold yellow]⚠  SCOPE CONFIRMATION[/bold yellow]",
+            border_style="yellow",
+            expand=True,
+        )
+    )
+
+    console.print()
+    scope_raw = console.input(
+        "[bold yellow]Authorized scope (CIDRs / hostnames / description): [/bold yellow]"
+    ).strip()
+
+    if not scope_raw:
+        console.print("[red][!] No scope declared. Exiting.[/red]")
+        sys.exit(0)
+
+    entries      = [e.strip() for e in scope_raw.split(",") if e.strip()]
+    net_entries  = [e for e in entries if _is_network_entry(e)]
+
+    if net_entries:
+        if _scope_contains_target(target, net_entries):
+            console.print(
+                f"[green][+] Target [cyan]{target}[/cyan] "
+                f"confirmed within declared scope.[/green]"
+            )
+        else:
+            console.print(
+                f"[red][!] Target [cyan]{target}[/cyan] does not fall within "
+                f"the declared scope. Exiting.[/red]"
+            )
+            sys.exit(0)
+    else:
+        # Free-text description — require explicit affirmation
+        console.print()
+        confirm = console.input(
+            f"[bold yellow]Confirm [cyan]{target}[/cyan] is within your authorized "
+            f"testing scope (type 'yes' to proceed): [/bold yellow]"
+        ).strip().lower()
+        if confirm != "yes":
+            console.print("[red][!] Scope not confirmed. Exiting.[/red]")
+            sys.exit(0)
+        console.print(
+            f"[green][+] Scope affirmation recorded for "
+            f"target [cyan]{target}[/cyan].[/green]"
+        )
+
+    return scope_raw
+
+
 def interactive_prompt(args: argparse.Namespace) -> argparse.Namespace:
     """
     Fill any missing required args interactively.
     Respects flags already set via CLI — never re-prompts for them.
     All prompts time out after _PROMPT_TIMEOUT seconds and accept their default.
+
+    Flow:
+        AFK? → Target → Default or Specify?
+            [Default]  scan level (graze/touch/poke/punch) + sneakiness (ghost/ninja/yolo/boss)
+            [Specify]  per-module toggle waterfall
     """
     global _AFK_MODE
     console.print(BANNER)
 
-    # ── AFK mode selection — shown first, short fuse ──────────────────────
+    # ── AFK mode — shown first, short fuse ───────────────────────────────
     afk_ans = _timed_input(
         "\nRun in AFK mode? All prompts use defaults and the scan runs unattended (y/n) [n]",
         default="n",
@@ -4138,6 +4273,7 @@ def interactive_prompt(args: argparse.Namespace) -> argparse.Namespace:
             "[bold cyan][~] AFK mode active — all prompts will auto-accept defaults[/bold cyan]"
         )
 
+    # ── Target ────────────────────────────────────────────────────────────
     if not args.target:
         raw = _timed_input("Target IP/domain", default="").strip()
         if not raw:
@@ -4145,79 +4281,167 @@ def interactive_prompt(args: argparse.Namespace) -> argparse.Namespace:
             sys.exit(1)
         args.target = raw
 
-    if not args.mode:
-        console.print("\n[bold]1=Ghost  2=Sneaky  3=YOLO  4=BOSS[/bold]")
-        try:
-            args.mode = int(_timed_input("Mode [1-4]", default="2").strip())
-        except ValueError:
-            console.print("[red][!] Invalid mode — defaulting to 2 (Sneaky)[/red]")
-            args.mode = 2
+    # ── Default or Specify? ───────────────────────────────────────────────
+    console.print(
+        "\n[bold]Configure attack parameters:[/bold]\n"
+        "  [D] Default  — choose scan depth and sneakiness level\n"
+        "  [S] Specify  — configure each module individually"
+    )
+    branch = _timed_input("Choice (D/S)", default="d").strip().lower()
 
-    if args.mode not in range(1, 5):
-        console.print("[red][!] Mode must be 1–4[/red]")
-        sys.exit(1)
+    if branch not in ("s", "specify"):
+        # ── BRANCH 1: scan level + sneakiness presets ─────────────────────
+        console.print(
+            "\n[bold]Scan level:[/bold]\n"
+            "  [graze]  Recon only — nmap + web/SMB/DNS fingerprinting\n"
+            "  [touch]  Recon + analysis — adds vuln report, searchsploit, web fuzz, file hunt\n"
+            "  [poke]   Full — adds credential attacks and post-auth enumeration\n"
+            "  [punch]  Maximum — everything including Claude CVE artifact analysis"
+        )
+        scan_level = _timed_input(
+            "Scan level (graze/touch/poke/punch)", default="touch"
+        ).strip().lower()
+        if scan_level not in ("graze", "touch", "poke", "punch"):
+            console.print("[yellow][~] Unrecognised level — defaulting to touch[/yellow]")
+            scan_level = "touch"
 
-    if args.mode == 4 and not args.confirm_boss:
-        # AFK cannot confirm BOSS — downgrade rather than hang
-        if _AFK_MODE:
-            console.print(
-                "[yellow][~] AFK mode cannot confirm BOSS. Downgrading to mode 3.[/yellow]"
-            )
-            args.mode = 3
-        else:
-            confirm = _timed_input("Type CONFIRM to use BOSS mode", default="")
-            if confirm != "CONFIRM":
-                console.print("[yellow]Cancelled.[/yellow]")
-                sys.exit(0)
-            args.confirm_boss = True
+        console.print(
+            "\n[bold]Sneakiness:[/bold]\n"
+            "  [ghost]  Slow and quiet — timing delays, minimal footprint\n"
+            "  [ninja]  Balanced — default pace\n"
+            "  [yolo]   Fast and loud — speed over stealth\n"
+            "  [boss]   Unrestricted — maximum aggression"
+        )
+        sneak = _timed_input(
+            "Sneakiness (ghost/ninja/yolo/boss)", default="ninja"
+        ).strip().lower()
+        sneak_map = {"ghost": 1, "ninja": 2, "yolo": 3, "boss": 4}
+        if sneak not in sneak_map:
+            console.print("[yellow][~] Unrecognised sneakiness — defaulting to ninja[/yellow]")
+            sneak = "ninja"
+        args.mode = sneak_map[sneak]
 
-    # Only prompt for module toggles that haven't been pre-set via CLI flags
-    if not args.no_creds:
-        ans = _timed_input("\nRun credential attack? (y/n)", default="y").strip().lower()
-        args.no_creds = (ans == "n")
-        if not args.no_creds and not args.loot:
-            loot = _timed_input("Loot file for credential stuffing (blank to skip)", default="").strip()
-            if loot:
-                args.loot = loot
+        if args.mode == 4 and not args.confirm_boss:
+            if _AFK_MODE:
+                console.print(
+                    "[yellow][~] AFK mode cannot confirm BOSS. Downgrading to YOLO.[/yellow]"
+                )
+                args.mode = 3
+            else:
+                confirm = _timed_input("Type CONFIRM to use BOSS mode", default="")
+                if confirm != "CONFIRM":
+                    console.print("[yellow]Cancelled.[/yellow]")
+                    sys.exit(0)
+                args.confirm_boss = True
 
-    if not args.no_searchsploit:
-        ans = _timed_input("Run searchsploit on findings? (y/n)", default="y").strip().lower()
-        args.no_searchsploit = (ans == "n")
+        # Apply scan level presets — only touch flags not already set via CLI
+        _PRESETS = {
+            "graze": dict(no_creds=True,  no_searchsploit=True,  no_vulnreport=True,
+                          no_artifacts=True,  no_filehunt=True,  no_webfuzz=True,
+                          no_postauth=True,  no_vulnprobe=True),
+            "touch": dict(no_creds=True,  no_searchsploit=False, no_vulnreport=False,
+                          no_artifacts=True,  no_filehunt=False, no_webfuzz=False,
+                          no_postauth=False, no_vulnprobe=False),
+            "poke":  dict(no_creds=False, no_searchsploit=False, no_vulnreport=False,
+                          no_artifacts=True,  no_filehunt=False, no_webfuzz=False,
+                          no_postauth=False, no_vulnprobe=False),
+            "punch": dict(no_creds=False, no_searchsploit=False, no_vulnreport=False,
+                          no_artifacts=False, no_filehunt=False, no_webfuzz=False,
+                          no_postauth=False, no_vulnprobe=False),
+        }
+        for attr, val in _PRESETS[scan_level].items():
+            setattr(args, attr, val)
 
-    if not args.no_vulnreport:
-        ans = _timed_input("Run vuln DB report? (y/n)", default="y").strip().lower()
-        args.no_vulnreport = (ans == "n")
-
-    if not args.no_artifacts:
-        if not _ANTHROPIC_KEY_PRESENT:
+        if not args.no_artifacts and not _ANTHROPIC_KEY_PRESENT:
             console.print(
                 "[yellow][~] ANTHROPIC_API_KEY not set — "
                 "CVE artifact analysis will be skipped[/yellow]"
             )
             args.no_artifacts = True
-        else:
-            ans = _timed_input("Run CVE artifact analysis via Claude? (y/n)", default="y").strip().lower()
-            args.no_artifacts = (ans == "n")
 
-    if not args.no_filehunt:
-        ans = _timed_input("Run high-value file hunt? (y/n)", default="y").strip().lower()
-        args.no_filehunt = (ans == "n")
+    else:
+        # ── BRANCH 2: per-module waterfall ────────────────────────────────
+        if not args.mode:
+            console.print("\n[bold]1=Ghost  2=Ninja  3=YOLO  4=BOSS[/bold]")
+            try:
+                args.mode = int(_timed_input("Mode [1-4]", default="2").strip())
+            except ValueError:
+                console.print("[red][!] Invalid mode — defaulting to 2 (Ninja)[/red]")
+                args.mode = 2
 
-    if not args.no_webfuzz:
-        ans = _timed_input("Run web directory/vhost fuzzing? (y/n)", default="y").strip().lower()
-        args.no_webfuzz = (ans == "n")
-        if not args.no_webfuzz and not args.wordlist:
-            wl = _timed_input("Wordlist path for fuzzing (blank for built-in)", default="").strip()
-            if wl:
-                args.wordlist = wl
+        if args.mode not in range(1, 5):
+            console.print("[red][!] Mode must be 1–4[/red]")
+            sys.exit(1)
 
-    if not args.no_postauth:
-        ans = _timed_input("Run post-auth enumeration (SSH/FTP)? (y/n)", default="y").strip().lower()
-        args.no_postauth = (ans == "n")
+        if args.mode == 4 and not args.confirm_boss:
+            if _AFK_MODE:
+                console.print(
+                    "[yellow][~] AFK mode cannot confirm BOSS. Downgrading to mode 3.[/yellow]"
+                )
+                args.mode = 3
+            else:
+                confirm = _timed_input("Type CONFIRM to use BOSS mode", default="")
+                if confirm != "CONFIRM":
+                    console.print("[yellow]Cancelled.[/yellow]")
+                    sys.exit(0)
+                args.confirm_boss = True
 
-    if not args.no_vulnprobe:
-        ans = _timed_input("Run nmap vuln probe pass? (y/n)", default="y").strip().lower()
-        args.no_vulnprobe = (ans == "n")
+        if not args.no_creds:
+            ans = _timed_input("\nRun credential attack? (y/n)", default="y").strip().lower()
+            args.no_creds = (ans == "n")
+            if not args.no_creds and not args.loot:
+                loot = _timed_input(
+                    "Loot file for credential stuffing (blank to skip)", default=""
+                ).strip()
+                if loot:
+                    args.loot = loot
+
+        if not args.no_searchsploit:
+            ans = _timed_input("Run searchsploit on findings? (y/n)", default="y").strip().lower()
+            args.no_searchsploit = (ans == "n")
+
+        if not args.no_vulnreport:
+            ans = _timed_input("Run vuln DB report? (y/n)", default="y").strip().lower()
+            args.no_vulnreport = (ans == "n")
+
+        if not args.no_artifacts:
+            if not _ANTHROPIC_KEY_PRESENT:
+                console.print(
+                    "[yellow][~] ANTHROPIC_API_KEY not set — "
+                    "CVE artifact analysis will be skipped[/yellow]"
+                )
+                args.no_artifacts = True
+            else:
+                ans = _timed_input(
+                    "Run CVE artifact analysis via Claude? (y/n)", default="y"
+                ).strip().lower()
+                args.no_artifacts = (ans == "n")
+
+        if not args.no_filehunt:
+            ans = _timed_input("Run high-value file hunt? (y/n)", default="y").strip().lower()
+            args.no_filehunt = (ans == "n")
+
+        if not args.no_webfuzz:
+            ans = _timed_input(
+                "Run web directory/vhost fuzzing? (y/n)", default="y"
+            ).strip().lower()
+            args.no_webfuzz = (ans == "n")
+            if not args.no_webfuzz and not args.wordlist:
+                wl = _timed_input(
+                    "Wordlist path for fuzzing (blank for built-in)", default=""
+                ).strip()
+                if wl:
+                    args.wordlist = wl
+
+        if not args.no_postauth:
+            ans = _timed_input(
+                "Run post-auth enumeration (SSH/FTP)? (y/n)", default="y"
+            ).strip().lower()
+            args.no_postauth = (ans == "n")
+
+        if not args.no_vulnprobe:
+            ans = _timed_input("Run nmap vuln probe pass? (y/n)", default="y").strip().lower()
+            args.no_vulnprobe = (ans == "n")
 
     return args
 
@@ -4312,6 +4536,9 @@ def main():
         console.print("[red][!] Invalid or unresolvable target.[/red]")
         sys.exit(1)
 
+    # ── Scope confirmation ────────────────────────────────────────────────
+    confirmed_scope = _confirm_scope(target)
+
     # ── Check required tools ──────────────────────────────────────────────
     for t in ["nmap", "nikto", "enum4linux", "whatweb", "dnsrecon"]:
         need(t)
@@ -4328,6 +4555,16 @@ def main():
 
     # ── Session directory (persistent, resumable) ─────────────────────────
     sdir = session_dir(target, getattr(args, "resume", None))
+
+    with open(Path(sdir) / "acceptance.log", "w") as f:
+        f.write(f"Disclaimer accepted: {datetime.utcnow().isoformat()}Z\n")
+    os.chmod(Path(sdir) / "acceptance.log", 0o444)
+
+    with open(Path(sdir) / "scope.log", "w") as f:
+        f.write(f"Target:    {target}\n")
+        f.write(f"Scope:     {confirmed_scope}\n")
+        f.write(f"Timestamp: {datetime.utcnow().isoformat()}Z\n")
+    os.chmod(Path(sdir) / "scope.log", 0o444)
 
     # The engine persists for the lifetime of this scan and is passed to
     # deliberate(), plan(), perceive(), and learn() at the sites below.
@@ -4744,6 +4981,27 @@ def main():
     _traj_path = str(Path(sdir) / "trajectory.json")
     _narr_path = generate_human_narrative(sdir, target, _traj_path)
     compute_audit_diff(sdir, target, _traj_path, _narr_path)
+
+    # ── Auto-sign session if operator credentials are configured ──────────
+    _op_key   = getattr(args, "operator_key",    None) or os.environ.get("DIG_CHAMPS_OPERATOR_KEY")
+    _op_cert  = getattr(args, "operator_cert",   None) or os.environ.get("DIG_CHAMPS_OPERATOR_CERT")
+    _ent_cert = getattr(args, "enterprise_cert", None) or os.environ.get("DIG_CHAMPS_ENTERPRISE_CERT")
+    if _op_key and _op_cert:
+        try:
+            sys.path.insert(0, _HERE)
+            from dig_champs_audit import sign_session as _sign_session  # type: ignore
+            _fp = _sign_session(sdir, _op_key, _op_cert, _ent_cert or None)
+            console.print(
+                f"[bold green][+] Session signed.[/bold green]  "
+                f"Fingerprint: [bold cyan]{_fp}[/bold cyan]"
+            )
+        except Exception as _sign_err:
+            console.print(f"[yellow][~] Auto-sign failed: {_sign_err}[/yellow]")
+    elif not _CRYPTO_AVAILABLE:
+        console.print(
+            "[dim][~] cryptography package not installed — session signing unavailable. "
+            "Install with: pip install cryptography>=42.0.0[/dim]"
+        )
 
     console.print(
         f"\n[bold green]✓ dig_champs complete.[/bold green]  "
