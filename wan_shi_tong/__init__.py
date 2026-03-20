@@ -1,7 +1,7 @@
 """
-wan_si_tong — Library of All Things (万事通)
+wan_shi_tong — Library of All Things (万事通)
 ================================================================
-The attack methodology encyclopedia for dig_champs.
+The attack methodology encyclopedia for kitsunebi.
 
 Author:           Danielle Grayson
 Created:          2026-03-16
@@ -13,29 +13,29 @@ live scan findings, and outputs a prioritised methodology list for
 the Trajectory Path Designer.
 
 Usage (standalone):
-    python -m wan_si_tong --findings findings.json
-    python -m wan_si_tong --tracker-report
-    python -m wan_si_tong --design-path --findings findings.json --mode 2
+    python -m wan_shi_tong --findings findings.json
+    python -m wan_shi_tong --tracker-report
+    python -m wan_shi_tong --design-path --findings findings.json --mode 2
 
-Usage (from dig_champs):
-    from wan_si_tong import collate_findings, TrajectoryPathDesigner, EngagementTracker
+Usage (from kitsunebi):
+    from wan_shi_tong import collate_findings, TrajectoryPathDesigner, EngagementTracker
     suggestions = collate_findings(findings, cred_results)
 """
 
 # ── Trigger all self-registrations ────────────────────────────────────────────
 # This import causes every methodology module to execute its _R.register() calls
-from wan_si_tong.methodologies import (  # noqa: F401
+from wan_shi_tong.methodologies import (  # noqa: F401
     generic, linux, windows, macos, android,
 )
 
 # ── Public API ────────────────────────────────────────────────────────────────
-from wan_si_tong.schema import Methodology, CATEGORIES, PHASES, TRIGGER_TYPES
-from wan_si_tong.registry import MethodologyRegistry
-from wan_si_tong.collator import collate_findings, get_next_steps
-from wan_si_tong.router import OSRouter, DetectedOS
-from wan_si_tong.path_designer import TrajectoryPathDesigner, PathStep
-from wan_si_tong.tracker import EngagementTracker
-from wan_si_tong.output import write_methodology_suggestions, run_collation
+from wan_shi_tong.schema import Methodology, CATEGORIES, PHASES, TRIGGER_TYPES
+from wan_shi_tong.registry import MethodologyRegistry
+from wan_shi_tong.collator import collate_findings, get_next_steps
+from wan_shi_tong.router import OSRouter, DetectedOS
+from wan_shi_tong.path_designer import TrajectoryPathDesigner, PathStep
+from wan_shi_tong.tracker import EngagementTracker
+from wan_shi_tong.output import write_methodology_suggestions, run_collation
 
 __all__ = [
     # Schema
@@ -69,6 +69,6 @@ _warnings = _registry.validate()
 if _warnings:
     import sys
     for _w in _warnings:
-        print(f"[wan_si_tong] WARNING: {_w}", file=sys.stderr)
+        print(f"[wan_shi_tong] WARNING: {_w}", file=sys.stderr)
 
 __version__ = "2.0.0"

@@ -1,5 +1,5 @@
 """
-_dc_rich.py — degraded stdlib drop-in for the rich API surface used by dig_champs.
+_kb_rich.py — degraded stdlib drop-in for the rich API surface used by kitsunebi.
 
 Covers:
   Console()  .print(str | Panel | Table)  .status(str) [context manager]

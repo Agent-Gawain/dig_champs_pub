@@ -6,11 +6,11 @@ post-exploitation, privilege escalation, and network service probing.
 They are registered with os_tags=["any"] so they surface regardless of
 which OS the router detects.
 
-All entries are migrated verbatim from the original wan_si_tong.py monolith.
+All entries are migrated verbatim from the original wan_shi_tong.py monolith.
 """
 
-from wan_si_tong.registry import MethodologyRegistry
-from wan_si_tong.schema import Methodology
+from wan_shi_tong.registry import MethodologyRegistry
+from wan_shi_tong.schema import Methodology
 
 _R = MethodologyRegistry.get()
 

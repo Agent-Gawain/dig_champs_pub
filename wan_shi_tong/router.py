@@ -13,7 +13,7 @@ Designer (path_designer.py) translates methodology IDs → phase names.
 
 Usage
 -----
-    from wan_si_tong.router import OSRouter, DetectedOS
+    from wan_shi_tong.router import OSRouter, DetectedOS
     router = OSRouter()
     detected = router.detect_os(findings)
     # detected.os_tag, detected.confidence

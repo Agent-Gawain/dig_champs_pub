@@ -8,8 +8,8 @@ Registered with os_tags=["linux"] so they only surface when the router
 detects a Linux target (or when collate_findings() is called with os_tag="linux").
 """
 
-from wan_si_tong.registry import MethodologyRegistry
-from wan_si_tong.schema import Methodology
+from wan_shi_tong.registry import MethodologyRegistry
+from wan_shi_tong.schema import Methodology
 
 _R = MethodologyRegistry.get()
 

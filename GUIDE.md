@@ -1,4 +1,4 @@
-# dig_champs — Step-by-Step Usage Guide
+# Kitsunebi — Step-by-Step Usage Guide
 
 This guide walks you through a real engagement from zero to report.
 For a flags reference, see [README.md](README.md).
@@ -52,7 +52,7 @@ Add it to your `.bashrc` / `.zshrc` to persist it across sessions.
 ### Option A — Interactive (recommended for first-timers)
 
 ```bash
-python3 dig_champs.py
+python3 kitsunebi.py
 ```
 
 You'll see the banner, then an **AFK mode prompt**:
@@ -88,7 +88,7 @@ After the AFK prompt, you'll be asked for:
 ### Option B — Flags only (recommended once you know what you want)
 
 ```bash
-python3 dig_champs.py -t 192.168.1.10 -m 2
+python3 kitsunebi.py -t 192.168.1.10 -m 2
 ```
 
 Passing `-t` and `-m` skips the interactive prompts entirely. Add `--no-*`
@@ -110,13 +110,13 @@ against a target with no detection capability and a short window, use 3.
 
 ```bash
 # Standard engagement
-python3 dig_champs.py -t 10.0.0.5 -m 2
+python3 kitsunebi.py -t 10.0.0.5 -m 2
 
 # Stealth engagement, longer inter-phase pauses
-python3 dig_champs.py -t 10.0.0.5 -m 1 --inter-phase-delay 60
+python3 kitsunebi.py -t 10.0.0.5 -m 1 --inter-phase-delay 60
 
 # Full send (explicit confirmation required)
-python3 dig_champs.py -t 10.0.0.5 -m 4 --confirm-boss
+python3 kitsunebi.py -t 10.0.0.5 -m 4 --confirm-boss
 ```
 
 ---
@@ -159,7 +159,7 @@ priority.
 Press `Ctrl-C` at any point. The session is saved. Resume with:
 
 ```bash
-python3 dig_champs.py --resume ~/.dc_sessions/192.168.1.10_20260314_143022
+python3 kitsunebi.py --resume ~/.kb_sessions/192.168.1.10_20260314_143022
 ```
 
 Each completed phase has a `.done_<phase>` marker. The scan picks up exactly
@@ -169,7 +169,7 @@ loaded.
 To find the session directory path if you've lost it:
 
 ```bash
-ls -lt ~/.dc_sessions/
+ls -lt ~/.kb_sessions/
 ```
 
 The most recent directory is your last run.
@@ -185,7 +185,7 @@ credentials, and high-value findings are highlighted.
 
 ### Session directory
 
-All output lands in `~/.dc_sessions/<target>_<timestamp>/`:
+All output lands in `~/.kb_sessions/<target>_<timestamp>/`:
 
 | File | What's in it |
 |------|--------------|
@@ -217,7 +217,7 @@ A summary is also written directly to your home directory:
 ### Recon only (no exploitation)
 
 ```bash
-python3 dig_champs.py -t 192.168.1.10 -m 1 \
+python3 kitsunebi.py -t 192.168.1.10 -m 1 \
     --no-creds --no-filehunt --no-webfuzz --no-postauth --no-vulnprobe
 ```
 
@@ -227,7 +227,7 @@ CVE report. No active exploitation attempts.
 ### Credential stuffing with a custom loot file
 
 ```bash
-python3 dig_champs.py -t 192.168.1.10 -m 2 --loot /path/to/found_creds.txt
+python3 kitsunebi.py -t 192.168.1.10 -m 2 --loot /path/to/found_creds.txt
 ```
 
 Loot file format — one `user:pass` per line:
@@ -243,7 +243,7 @@ Loot file credentials are tried first, then the built-in default list.
 ### Web-focused engagement
 
 ```bash
-python3 dig_champs.py -t 192.168.1.10 -m 2 \
+python3 kitsunebi.py -t 192.168.1.10 -m 2 \
     --no-creds --no-filehunt --no-postauth \
     --wordlist /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt
 ```
@@ -251,7 +251,7 @@ python3 dig_champs.py -t 192.168.1.10 -m 2 \
 ### AFK overnight run
 
 ```bash
-python3 dig_champs.py -t 192.168.1.10 -m 2 --loot creds.txt
+python3 kitsunebi.py -t 192.168.1.10 -m 2 --loot creds.txt
 ```
 
 When the AFK prompt appears, type `y`. The full scan runs unattended with all
@@ -260,7 +260,7 @@ modules enabled and all phase-level prompts auto-accepted.
 Alternatively, skip the interactive prompt entirely by providing all flags:
 
 ```bash
-python3 dig_champs.py -t 192.168.1.10 -m 2 --loot creds.txt \
+python3 kitsunebi.py -t 192.168.1.10 -m 2 --loot creds.txt \
     --wordlist /path/to/wordlist.txt
 ```
 
@@ -268,32 +268,32 @@ python3 dig_champs.py -t 192.168.1.10 -m 2 --loot creds.txt \
 
 ```bash
 # Full port sweep
-python3 dig_champs.py -t 192.168.1.10 -m 2 --ports "1-65535"
+python3 kitsunebi.py -t 192.168.1.10 -m 2 --ports "1-65535"
 
 # Specific ports only
-python3 dig_champs.py -t 192.168.1.10 -m 2 --ports "22,80,443,445,3306,8080,8443"
+python3 kitsunebi.py -t 192.168.1.10 -m 2 --ports "22,80,443,445,3306,8080,8443"
 
 # Exclude noisy ports
-python3 dig_champs.py -t 192.168.1.10 -m 2 --exclude-ports "135,137,138,139"
+python3 kitsunebi.py -t 192.168.1.10 -m 2 --exclude-ports "135,137,138,139"
 ```
 
 ---
 
-## Using wan_si_tong Standalone
+## Using Wan Shi Tong Standalone
 
-wan_si_tong is the attack methodology library embedded in dig_champs. It also
+Wan Shi Tong is the attack methodology library embedded in Kitsunebi. It also
 runs as a standalone CLI for post-scan analysis and path planning.
 
 ### List all methodologies
 
 ```bash
-python3 -m wan_si_tong --list
+python3 -m wan_shi_tong --list
 ```
 
 Output example:
 
 ```
-Wan Si Tong — 65 methodologies registered
+Wan Shi Tong — 65 methodologies registered
 
   [wsit_cms_attack]       CMS-Targeted Attack           (phase=vulnprobe, opsec=3/5, cat=web)
   [wsit_cred_extract]     Credential Extraction          (phase=postauth,  opsec=2/5, cat=privesc)
@@ -303,10 +303,10 @@ Wan Si Tong — 65 methodologies registered
 
 ### Score methodologies against a findings file
 
-Pass a dig_champs JSON report and get ranked methodology suggestions:
+Pass a kitsunebi JSON report and get ranked methodology suggestions:
 
 ```bash
-python3 -m wan_si_tong \
+python3 -m wan_shi_tong \
     --findings ~/report_192.168.1.10_20260314_143022.json \
     --target 192.168.1.10 \
     --out suggestions.json
@@ -327,7 +327,7 @@ Top suggestions for '192.168.1.10':
 Get a recommended phase queue for an existing report:
 
 ```bash
-python3 -m wan_si_tong \
+python3 -m wan_shi_tong \
     --findings ~/report_192.168.1.10_20260314_143022.json \
     --design-path \
     --mode 2
@@ -352,7 +352,7 @@ Path Designer — mode 2 — recommended phase queue:
 ### Filter by OS
 
 ```bash
-python3 -m wan_si_tong \
+python3 -m wan_shi_tong \
     --findings ~/report_192.168.1.10_20260314_143022.json \
     --os windows \
     --design-path
@@ -363,7 +363,7 @@ python3 -m wan_si_tong \
 After multiple scans, check how each methodology has performed historically:
 
 ```bash
-python3 -m wan_si_tong --tracker-report
+python3 -m wan_shi_tong --tracker-report
 ```
 
 Output:
@@ -392,18 +392,18 @@ This creates `_vendor/` containing `requests`, `rich`, and `anthropic`.
 ### Transfer to the engagement box
 
 ```
-dig_champs.py
-_dc_http.py
-_dc_rich.py
+kitsunebi.py
+_kb_http.py
+_kb_rich.py
 _vendor/
-wan_si_tong/
+wan_shi_tong/
 dc_mind/
 ```
 
 ### Run — no pip needed
 
 ```bash
-python3 dig_champs.py -t 192.168.1.10 -m 2 --offline
+python3 kitsunebi.py -t 192.168.1.10 -m 2 --offline
 ```
 
 `--offline` disables CVE database lookups and Claude API calls immediately,
@@ -414,7 +414,7 @@ at startup and sets offline mode automatically if `--offline` isn't passed.
 
 ```bash
 python3 build_vendor.py --pyz
-python3 dig_champs.pyz -t 192.168.1.10 -m 2 --offline
+python3 kitsunebi.pyz -t 192.168.1.10 -m 2 --offline
 ```
 
 ---
@@ -433,4 +433,4 @@ Every interactive prompt times out and auto-accepts its default:
 
 The timeout is printed inline with each prompt so you always know the clock is
 running. To change the global timeout, edit `_PROMPT_TIMEOUT` near the top of
-`dig_champs.py`.
+`kitsunebi.py`.

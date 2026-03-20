@@ -11,14 +11,14 @@ The registry is then consumed by:
 
 Usage
 -----
-    from wan_si_tong.registry import MethodologyRegistry
+    from wan_shi_tong.registry import MethodologyRegistry
     _R = MethodologyRegistry.get()
     _R.register(methodology_instance, os_tags=["linux"])
 """
 
 import threading
 from typing import Optional
-from wan_si_tong.schema import Methodology
+from wan_shi_tong.schema import Methodology
 
 
 class MethodologyRegistry:
@@ -108,7 +108,7 @@ class MethodologyRegistry:
     def validate(self) -> list[str]:
         """
         Post-import consistency check. Returns a list of warning strings.
-        Called once from wan_si_tong/__init__.py after all modules are imported.
+        Called once from wan_shi_tong/__init__.py after all modules are imported.
         """
         warnings: list[str] = []
         import re

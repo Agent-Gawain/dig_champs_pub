@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-dc_creds.py — Credential attack module for dig_champs_mini
+dc_creds.py — Credential attack module for kitsunebi_mini
 Targets: FTP, RDP, SSH, SMB
 Modes:   default/common creds | credential stuffing from loot file
 Offline: no internet required — all wordlists are embedded or local
@@ -166,7 +166,7 @@ def detect_services(nmap_output: str) -> list[dict]:
             found.append({"service": canonical, "port": port})
     return found
 
-# ── Main entry point (called by dig_champs_mini or standalone) ────────────────
+# ── Main entry point (called by kitsunebi_mini or standalone) ────────────────
 
 def run_creds(target: str, mode: int, nmap_output: str,
               loot_path: str | None = None) -> list[dict]:

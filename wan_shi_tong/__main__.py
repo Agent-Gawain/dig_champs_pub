@@ -1,9 +1,9 @@
 """
 __main__.py — CLI entry point.
 
-Usage (backward-compatible with old wan_si_tong.py monolith):
-    python -m wan_si_tong --findings findings.json
-    python -m wan_si_tong --findings findings.json --out path_suggestions.json
+Usage (backward-compatible with old wan_shi_tong.py monolith):
+    python -m wan_shi_tong --findings findings.json
+    python -m wan_shi_tong --findings findings.json --out path_suggestions.json
 
 New flags:
     --tracker-report        Print engagement outcome statistics and exit
@@ -20,11 +20,11 @@ import sys
 
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="wan_si_tong",
-        description="Wan Si Tong — Attack Methodology Library for dig_champs",
+        prog="wan_shi_tong",
+        description="Wan Si Tong — Attack Methodology Library for kitsunebi",
     )
     p.add_argument("-f", "--findings",
-                   help="Path to findings JSON (dig_champs report or raw findings list)")
+                   help="Path to findings JSON (kitsunebi report or raw findings list)")
     p.add_argument("-t", "--target", default="unknown",
                    help="Target identifier (for output metadata)")
     p.add_argument("-o", "--out", default="path_suggestions.json",
@@ -48,9 +48,9 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     # Import here to ensure all methodology modules are registered
-    from wan_si_tong.registry import MethodologyRegistry
-    from wan_si_tong.tracker import EngagementTracker
-    from wan_si_tong.output import run_collation
+    from wan_shi_tong.registry import MethodologyRegistry
+    from wan_shi_tong.tracker import EngagementTracker
+    from wan_shi_tong.output import run_collation
 
     args = _build_parser().parse_args()
 
@@ -85,8 +85,8 @@ def main() -> None:
 
     # ── --design-path: run Path Designer ─────────────────────────────────────
     if args.design_path:
-        from wan_si_tong.tracker import EngagementTracker
-        from wan_si_tong.path_designer import TrajectoryPathDesigner
+        from wan_shi_tong.tracker import EngagementTracker
+        from wan_shi_tong.path_designer import TrajectoryPathDesigner
         tracker = EngagementTracker()
         designer = TrajectoryPathDesigner(
             trajectory={},

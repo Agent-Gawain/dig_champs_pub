@@ -1,6 +1,6 @@
 # Legal Disclaimer — Authorized Use Only
 
-**dig_champs** is a security research and penetration testing framework developed
+**Kitsunebi** is a security research and penetration testing framework developed
 for use by authorized security professionals in lawful engagements.
 
 ## Intended Use

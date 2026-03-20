@@ -7,8 +7,8 @@ instrumentation, certificate pinning bypass, and Android privilege escalation.
 Registered with os_tags=["android"].
 """
 
-from wan_si_tong.registry import MethodologyRegistry
-from wan_si_tong.schema import Methodology
+from wan_shi_tong.registry import MethodologyRegistry
+from wan_shi_tong.schema import Methodology
 
 _R = MethodologyRegistry.get()
 

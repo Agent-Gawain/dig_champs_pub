@@ -12,7 +12,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from wan_si_tong.collator import collate_findings
+from wan_shi_tong.collator import collate_findings
 
 
 def write_methodology_suggestions(
@@ -26,7 +26,7 @@ def write_methodology_suggestions(
     Output schema:
     {
         "schema_version": "2.0",
-        "source": "wan_si_tong",
+        "source": "wan_shi_tong",
         "target": <target>,
         "generated": <ISO timestamp>,
         "count": <int>,
@@ -35,14 +35,14 @@ def write_methodology_suggestions(
     """
     doc = {
         "schema_version": "2.0",
-        "source":         "wan_si_tong",
+        "source":         "wan_shi_tong",
         "target":         target,
         "generated":      datetime.utcnow().isoformat() + "Z",
         "count":          len(suggestions),
         "suggestions":    suggestions,
     }
     Path(out_path).write_text(json.dumps(doc, indent=2), encoding="utf-8")
-    print(f"[wan_si_tong] Wrote {len(suggestions)} methodology suggestions → {out_path}")
+    print(f"[wan_shi_tong] Wrote {len(suggestions)} methodology suggestions → {out_path}")
 
 
 def run_collation(
@@ -56,7 +56,7 @@ def run_collation(
     Load findings from a JSON file, collate against the library,
     and write suggestions to out_path.
 
-    Accepts both a raw findings list and the dig_champs report format
+    Accepts both a raw findings list and the kitsunebi report format
     (dict with "findings" key).
 
     Returns the suggestions list.
@@ -69,7 +69,7 @@ def run_collation(
         findings = raw["findings"]
     else:
         print(
-            f"[wan_si_tong] Unrecognised findings format in {findings_path}",
+            f"[wan_shi_tong] Unrecognised findings format in {findings_path}",
             file=sys.stderr,
         )
         return []

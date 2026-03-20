@@ -1,8 +1,8 @@
 """
 path_designer.py — TrajectoryPathDesigner: DAG sort + phase queue translation.
 
-Implements Tier 0 of the dig_champs orchestration hierarchy.
-Replaces the Path Designer stub in the old wan_si_tong.py monolith.
+Implements Tier 0 of the kitsunebi orchestration hierarchy.
+Replaces the Path Designer stub in the old wan_shi_tong.py monolith.
 
 Algorithm
 ---------
@@ -11,13 +11,13 @@ Algorithm
 2. Assign node weights:
      weight = relevance_score × (1 + tracker.success_rate(id) × TRACKER_WEIGHT) × mode_factor
 3. Kahn's topological sort with tie-breaking by weight descending.
-4. Translate the ordered methodology list to dig_champs phase names
+4. Translate the ordered methodology list to kitsunebi phase names
    using PHASE_TO_METHODOLOGY_MAP (first-seen phase order, terminals last).
 5. Cap at MAX_PATH_STEPS.
 
 Usage
 -----
-    from wan_si_tong.path_designer import TrajectoryPathDesigner
+    from wan_shi_tong.path_designer import TrajectoryPathDesigner
 
     designer = TrajectoryPathDesigner(
         trajectory={},          # pre-scan: empty; or contents of trajectory.json
@@ -54,9 +54,9 @@ _COMPOSITE_FLOOR_BY_MODE: dict[int, float] = {
 _COLD_START_MIN_INVOCATIONS = 5
 
 # ── Phase → Methodology mapping ───────────────────────────────────────────────
-# Maps dig_champs phase names to the methodology IDs that represent work
+# Maps kitsunebi phase names to the methodology IDs that represent work
 # done during that phase. Used by:
-#   - to_phase_queue()     (designer → dig_champs)
+#   - to_phase_queue()     (designer → kitsunebi)
 #   - tracker.flush_session() (phase → outcomes)
 
 PHASE_TO_METHODOLOGY_MAP: dict[str, list[str]] = {
@@ -146,7 +146,7 @@ class PathStep:
     expected_impact:  float             # 0.0–1.0 weighted score
     opsec_cost:       int               # cumulative opsec_level so far in path
     depends_on:       list[str]         = field(default_factory=list)
-    dig_champs_phase: Optional[str]     = None
+    kitsunebi_phase: Optional[str]     = None
     satisfiable:      bool              = True
 
 
@@ -160,7 +160,7 @@ class TrajectoryPathDesigner:
     ------
     trajectory  : Contents of trajectory.json (may be empty dict pre-scan)
     suggestions : Output of collate_findings() — list of scored methodology dicts
-    mode        : dig_champs engagement mode (1=Ghost .. 4=BOSS)
+    mode        : kitsunebi engagement mode (1=Ghost .. 4=BOSS)
     tracker     : Optional EngagementTracker for success-rate weighting
     """
 
@@ -378,7 +378,7 @@ class TrajectoryPathDesigner:
                 expected_impact=weight,
                 opsec_cost=cumulative_opsec,
                 depends_on=preds,
-                dig_champs_phase=phase,
+                kitsunebi_phase=phase,
                 satisfiable=True,
             ))
 
@@ -387,16 +387,16 @@ class TrajectoryPathDesigner:
 
     def to_phase_queue(self) -> list[str]:
         """
-        Convert the ordered PathStep list to a dig_champs-compatible phase queue.
+        Convert the ordered PathStep list to a kitsunebi-compatible phase queue.
 
-        Walk the path; emit each dig_champs_phase in first-seen order.
+        Walk the path; emit each kitsunebi_phase in first-seen order.
         Terminal phases (vulnreport, artifacts) are always appended last.
         """
         path = self.build_path()
         seen: list[str] = []
 
         for step in path:
-            ph = step.dig_champs_phase
+            ph = step.kitsunebi_phase
             if ph and ph not in seen and ph not in _TERMINAL_PHASES:
                 seen.append(ph)
 

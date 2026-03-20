@@ -15,8 +15,8 @@ on similar targets score higher.
 """
 
 from dataclasses import asdict
-from wan_si_tong.registry import MethodologyRegistry
-from wan_si_tong.schema import Methodology
+from wan_shi_tong.registry import MethodologyRegistry
+from wan_shi_tong.schema import Methodology
 
 # Blend weights: trigger match vs. historical success
 _TRIGGER_WEIGHT  = 0.70
@@ -149,7 +149,7 @@ def collate_findings(
 
     Parameters
     ----------
-    findings      : Accumulated scan findings list from dig_champs
+    findings      : Accumulated scan findings list from kitsunebi
     cred_results  : Cracked credentials (list of {user, password, service, port})
     min_score     : Minimum relevance threshold (default 0.3)
     os_tag        : Detected OS tag ("linux", "windows", "macos", "android", or None)

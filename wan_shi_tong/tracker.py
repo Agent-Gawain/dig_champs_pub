@@ -1,12 +1,12 @@
 """
 tracker.py — EngagementTracker: records methodology outcomes across all scans.
 
-Persists to ~/.dc_sessions/wst_tracker.json (global, not per-session).
+Persists to ~/.kb_sessions/wst_tracker.json (global, not per-session).
 Atomic writes prevent corruption if the process is killed mid-scan.
 
 Usage
 -----
-    from wan_si_tong.tracker import EngagementTracker
+    from wan_shi_tong.tracker import EngagementTracker
 
     tracker = EngagementTracker()
 
@@ -36,7 +36,7 @@ from typing import Optional
 # Import here to avoid circular; PHASE_TO_METHODOLOGY_MAP is defined in path_designer
 # We use a lazy import inside flush_session.
 
-_TRACKER_PATH   = Path.home() / ".dc_sessions" / "wst_tracker.json"
+_TRACKER_PATH   = Path.home() / ".kb_sessions" / "wst_tracker.json"
 _SCHEMA_VERSION = "2.0"
 _MAX_TARGETS    = 20   # rolling window for targets_succeeded / targets_failed
 _NEUTRAL_RATE   = 0.50  # default success_rate for untested methodologies
@@ -47,7 +47,7 @@ class EngagementTracker:
     Global engagement outcome tracker.
 
     Thread-safe via a per-instance lock around file I/O.
-    Multiple concurrent dig_champs instances on the same machine will
+    Multiple concurrent kitsunebi instances on the same machine will
     use fcntl.flock (Unix) or a best-effort no-lock fallback (Windows).
     """
 
@@ -209,7 +209,7 @@ class EngagementTracker:
         findings: list[dict],
     ) -> None:
         """
-        Called at the end of a dig_champs scan to record outcomes for all
+        Called at the end of a kitsunebi scan to record outcomes for all
         executed phases.
 
         Uses PHASE_TO_METHODOLOGY_MAP (from path_designer) to translate
@@ -218,11 +218,11 @@ class EngagementTracker:
         """
         # Lazy import to avoid circular dependency
         try:
-            from wan_si_tong.path_designer import PHASE_TO_METHODOLOGY_MAP
+            from wan_shi_tong.path_designer import PHASE_TO_METHODOLOGY_MAP
         except ImportError:
             return
 
-        registry_module = __import__("wan_si_tong.registry", fromlist=["MethodologyRegistry"])
+        registry_module = __import__("wan_shi_tong.registry", fromlist=["MethodologyRegistry"])
         registry = registry_module.MethodologyRegistry.get()
 
         # Build set of finding keys present in final findings
@@ -266,7 +266,7 @@ class EngagementTracker:
         """Print a formatted engagement outcome table to stdout."""
         methods = self._data.get("methodologies", {})
         if not methods:
-            print("[wan_si_tong] No engagement data recorded yet.")
+            print("[wan_shi_tong] No engagement data recorded yet.")
             return
 
         # Sort by invocations descending

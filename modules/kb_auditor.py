@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-dg_auditor.py — dig_champs Scan Auditor
+kb_auditor.py — kitsunebi Scan Auditor
 ================================================================
-A standalone review interface for completed dig_champs scans.
+A standalone review interface for completed kitsunebi scans.
 
 Allows an operator or analyst to:
-  - Browse all previous scan sessions stored in ~/.dc_sessions/
+  - Browse all previous scan sessions stored in ~/.kb_sessions/
   - Search sessions by target, date range, or finding type
   - Display the human-readable narrative (trajectory_human.md)
   - Display the machine trajectory (trajectory.json) in a readable format
@@ -20,21 +20,21 @@ INTENDED BEHAVIOUR
 ────────────────────────────────────────────────────────────────────────────────
 
 Interactive mode (no args):
-    python3 dg_auditor.py
-    → Browse ~/.dc_sessions/ with a Rich-rendered session picker.
+    python3 kb_auditor.py
+    → Browse ~/.kb_sessions/ with a Rich-rendered session picker.
       Select a session → view sub-menu: narrative / machine log / audit diff / export.
 
 Targeted mode:
-    python3 dg_auditor.py --target 10.0.0.1
+    python3 kb_auditor.py --target 10.0.0.1
     → List all sessions for that target, most recent first.
 
-    python3 dg_auditor.py --session ~/.dc_sessions/10.0.0.1_20260313_142201/
+    python3 kb_auditor.py --session ~/.kb_sessions/10.0.0.1_20260313_142201/
     → Jump directly to a specific session sub-menu.
 
-    python3 dg_auditor.py --compare <session_a> <session_b>
+    python3 kb_auditor.py --compare <session_a> <session_b>
     → Side-by-side delta: new findings in B not in A, resolved findings, phase timing diffs.
 
-    python3 dg_auditor.py --export <session> --out report.pdf
+    python3 kb_auditor.py --export <session> --out report.pdf
     → Generate a combined PDF/Markdown operator report (narrative + audit + findings).
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -73,9 +73,9 @@ from pathlib import Path
 
 # ── Session Discovery ─────────────────────────────────────────────────────────
 
-def list_sessions(dc_sessions_dir: str | None = None) -> list[dict]:
+def list_sessions(kb_sessions_dir: str | None = None) -> list[dict]:
     """
-    Return a list of all sessions in ~/.dc_sessions/ (or given dir).
+    Return a list of all sessions in ~/.kb_sessions/ (or given dir).
 
     Each entry:
     {
@@ -94,7 +94,7 @@ def list_sessions(dc_sessions_dir: str | None = None) -> list[dict]:
     raise NotImplementedError
 
 
-def find_sessions(target: str, dc_sessions_dir: str | None = None) -> list[dict]:
+def find_sessions(target: str, kb_sessions_dir: str | None = None) -> list[dict]:
     """
     Filter list_sessions() to sessions matching the given target string.
     Partial match (e.g. "10.0.0" matches "10.0.0.1").
@@ -161,7 +161,7 @@ def show_audit(session: dict) -> None:
 def show_findings_summary(session: dict) -> None:
     """
     Render the findings list from report_*.json as a Rich table grouped by severity.
-    Reuses _sev_label logic from dig_champs (or reimplements it locally).
+    Reuses _sev_label logic from kitsunebi (or reimplements it locally).
     """
     raise NotImplementedError
 
@@ -262,11 +262,11 @@ def main() -> None:
     """
     Argument parsing and dispatch.
 
-    python3 dg_auditor.py                            → interactive_session_picker()
-    python3 dg_auditor.py --target <t>               → find_sessions() + picker
-    python3 dg_auditor.py --session <path>           → interactive_session_menu()
-    python3 dg_auditor.py --compare <path_a> <path_b>→ compare_sessions() + show_comparison()
-    python3 dg_auditor.py --export <path> [--out f]  → export_report()
+    python3 kb_auditor.py                            → interactive_session_picker()
+    python3 kb_auditor.py --target <t>               → find_sessions() + picker
+    python3 kb_auditor.py --session <path>           → interactive_session_menu()
+    python3 kb_auditor.py --compare <path_a> <path_b>→ compare_sessions() + show_comparison()
+    python3 kb_auditor.py --export <path> [--out f]  → export_report()
     """
     raise NotImplementedError
 

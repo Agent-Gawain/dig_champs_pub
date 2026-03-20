@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-dc_vulnreport.py — Windows host companion to dig_champs_mini
+dc_vulnreport.py — Windows host companion to kitsunebi_mini
 Reads a .json report from the Kali VM shared folder, queries NVD, CVE Program,
 CVE Details, OSV, and Go Vuln DB for each finding, then outputs a ranked top-10.
 
@@ -314,8 +314,8 @@ def print_report(top10: list[dict], target: str, output_path: str | None):
 
 def main():
     ap = argparse.ArgumentParser(
-        description="Windows host vuln lookup companion for dig_champs_mini")
-    ap.add_argument("report",         help="Path to dig_champs_mini JSON report")
+        description="Windows host vuln lookup companion for kitsunebi_mini")
+    ap.add_argument("report",         help="Path to kitsunebi_mini JSON report")
     ap.add_argument("-o","--output",  help="Save top-10 as JSON to this path", default=None)
     args = ap.parse_args()
 

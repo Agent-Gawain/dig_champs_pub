@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-build_vendor.py — Pre-download dig_champs dependencies for air-gapped deployment.
+build_vendor.py — Pre-download kitsunebi dependencies for air-gapped deployment.
 
 Run this ONCE on an internet-connected machine:
     python3 build_vendor.py
 
 This creates a _vendor/ directory alongside this script containing the full
 requests, rich, and anthropic packages. Transfer the entire folder to any
-air-gapped target alongside dig_champs(1).py — no pip required on the target.
+air-gapped target alongside kitsunebi(1).py — no pip required on the target.
 
-Optionally also builds a single-file dig_champs.pyz zipapp (pass --pyz).
+Optionally also builds a single-file kitsunebi.pyz zipapp (pass --pyz).
 """
 
 import argparse
@@ -22,8 +22,8 @@ from pathlib import Path
 
 HERE   = Path(__file__).parent.resolve()
 VENDOR = HERE / "_vendor"
-MAIN   = HERE / "dig_champs(1).py"
-PYZ    = HERE / "dig_champs.pyz"
+MAIN   = HERE / "kitsunebi(1).py"
+PYZ    = HERE / "kitsunebi.pyz"
 
 PACKAGES = ["requests", "rich", "anthropic"]
 
@@ -43,12 +43,12 @@ def build_vendor():
 
 
 def build_pyz():
-    """Bundle dig_champs(1).py + _vendor/ + stub files into a single .pyz."""
+    """Bundle kitsunebi(1).py + _vendor/ + stub files into a single .pyz."""
     if not MAIN.exists():
         print(f"[!] {MAIN} not found — cannot build .pyz")
         return
 
-    STUB_FILES = [HERE / "_dc_http.py", HERE / "_dc_rich.py"]
+    STUB_FILES = [HERE / "_kb_http.py", HERE / "_kb_rich.py"]
 
     # A zipapp needs a __main__.py entry point
     main_source = MAIN.read_text(encoding="utf-8")
@@ -79,14 +79,14 @@ def build_pyz():
         zipapp.create_archive(str(tmp), str(PYZ), interpreter="/usr/bin/env python3")
 
     print(f"[+] Single-file archive → {PYZ}")
-    print(f"    Usage: python3 dig_champs.pyz -t <target>")
+    print(f"    Usage: python3 kitsunebi.pyz -t <target>")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--pyz", action="store_true",
-                        help="Also build a single-file dig_champs.pyz zipapp after vendoring")
+                        help="Also build a single-file kitsunebi.pyz zipapp after vendoring")
     parser.add_argument("--pyz-only", action="store_true",
                         help="Only build the .pyz (assumes _vendor/ already populated)")
     args = parser.parse_args()
@@ -102,8 +102,8 @@ def main():
         print("Transfer these files/folders to your air-gapped target:")
         print(f"  {MAIN.name}")
         print(f"  _vendor/")
-        print(f"  _dc_http.py")
-        print(f"  _dc_rich.py")
+        print(f"  _kb_http.py")
+        print(f"  _kb_rich.py")
         print()
         print("Or re-run with --pyz for a single-file bundle instead.")
 

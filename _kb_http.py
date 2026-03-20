@@ -1,5 +1,5 @@
 """
-_dc_http.py — stdlib drop-in for the requests API surface used by dig_champs.
+_kb_http.py — stdlib drop-in for the requests API surface used by kitsunebi.
 
 Covers:
   requests.get(url, *, auth, timeout, verify, allow_redirects, params, headers)
@@ -69,7 +69,7 @@ def _do_request(
     if params:
         url = url + ("&" if "?" in url else "?") + urllib.parse.urlencode(params)
 
-    hdrs = {"User-Agent": "dig_champs/1.0"}
+    hdrs = {"User-Agent": "kitsunebi/1.0"}
     if headers:
         hdrs.update(headers)
     if auth:

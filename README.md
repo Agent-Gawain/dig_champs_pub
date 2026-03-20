@@ -1,4 +1,4 @@
-# Digital Ghost — DIG CHAMPS
+# Digital Ghost — KITSUNEBI
 
 Red-team recon and post-exploitation framework. Automated multi-phase attack surface mapping with live adaptive phase sequencing and optional Claude-powered analysis.
 
@@ -7,7 +7,7 @@ Red-team recon and post-exploitation framework. Automated multi-phase attack sur
 >
 > This tool is for **authorized penetration testing and security research only.**
 > You must have explicit written permission from the owner of any system you
-> target before running dig_champs against it.
+> target before running kitsunebi against it.
 >
 > Unauthorized use is illegal. The author accepts no liability for misuse.
 > See [DISCLAIMER.md](./DISCLAIMER.md) and [LICENSE](./LICENSE) for full terms.
@@ -74,22 +74,22 @@ pip install requests rich anthropic
 
 ```bash
 git clone <repo>
-cd dig_champs
+cd kitsunebi
 pip install requests rich anthropic   # anthropic optional
-python3 dig_champs.py -t <target>
+python3 kitsunebi.py -t <target>
 ```
 
 ---
 
 ## Air-Gapped / Offline Deployment
 
-Dig Champs is designed to run on fully air-gapped engagement boxes with zero pip access. There are three tiers:
+Kitsunebi is designed to run on fully air-gapped engagement boxes with zero pip access. There are three tiers:
 
 ### Tier 1 — Standard (pip available)
 
 ```bash
 pip install requests rich anthropic
-python3 dig_champs.py -t <target>
+python3 kitsunebi.py -t <target>
 ```
 
 ### Tier 2 — Vendored (prep on connected machine, deploy air-gapped)
@@ -103,10 +103,10 @@ python3 build_vendor.py
 This downloads `requests`, `rich`, and `anthropic` into a `_vendor/` directory. Transfer the following to the target:
 
 ```
-dig_champs.py
+kitsunebi.py
 _vendor/          ← full real packages
-_dc_http.py
-_dc_rich.py
+_kb_http.py
+_kb_rich.py
 build_vendor.py   ← optional, for reference
 ```
 
@@ -116,18 +116,18 @@ The tool auto-detects `_vendor/` at startup and loads packages from it.
 
 ```bash
 python3 build_vendor.py --pyz
-# produces: dig_champs.pyz
-python3 dig_champs.pyz -t <target>
+# produces: kitsunebi.pyz
+python3 kitsunebi.pyz -t <target>
 ```
 
 ### Tier 3 — Cold drop (no prep, no pip, no vendor)
 
-If nothing is pre-installed, the tool automatically falls back to `_dc_http.py` and `_dc_rich.py` — stdlib-only companion stubs bundled alongside the script. Drop these three files and run:
+If nothing is pre-installed, the tool automatically falls back to `_kb_http.py` and `_kb_rich.py` — stdlib-only companion stubs bundled alongside the script. Drop these three files and run:
 
 ```
-dig_champs.py
-_dc_http.py
-_dc_rich.py
+kitsunebi.py
+_kb_http.py
+_kb_rich.py
 ```
 
 Output will be plain text instead of color/tables, but all scan functionality is fully intact.
@@ -137,7 +137,7 @@ Output will be plain text instead of color/tables, but all scan functionality is
 If the box has no outbound internet but is connected to your target network (the common engagement scenario), pass `--offline` to immediately suppress CVE database lookups and Claude API calls without waiting for timeouts:
 
 ```bash
-python3 dig_champs.py -t 192.168.1.10 --offline
+python3 kitsunebi.py -t 192.168.1.10 --offline
 ```
 
 If `--offline` is not passed, the tool probes `8.8.8.8:53` at startup and sets offline mode automatically if unreachable.
@@ -149,26 +149,26 @@ If `--offline` is not passed, the tool probes `8.8.8.8:53` at startup and sets o
 ### Interactive mode (prompts for target and mode)
 
 ```bash
-python3 dig_champs.py
+python3 kitsunebi.py
 ```
 
 ### Argparse mode
 
 ```bash
 # Basic recon + all phases, mode 2
-python3 dig_champs.py -t 192.168.1.10 -m 2
+python3 kitsunebi.py -t 192.168.1.10 -m 2
 
 # Stealth mode, skip creds and web fuzzing
-python3 dig_champs.py -t 192.168.1.10 -m 1 --no-creds --no-webfuzz
+python3 kitsunebi.py -t 192.168.1.10 -m 1 --no-creds --no-webfuzz
 
 # Aggressive scan with custom port list and loot file
-python3 dig_champs.py -t 10.0.0.5 -m 3 --ports "1-65535" --loot creds.txt
+python3 kitsunebi.py -t 10.0.0.5 -m 3 --ports "1-65535" --loot creds.txt
 
 # Full send — mode 4 requires explicit confirmation
-python3 dig_champs.py -t 10.0.0.5 -m 4 --confirm-boss
+python3 kitsunebi.py -t 10.0.0.5 -m 4 --confirm-boss
 
 # Air-gapped engagement
-python3 dig_champs.py -t 172.16.0.1 -m 2 --offline
+python3 kitsunebi.py -t 172.16.0.1 -m 2 --offline
 ```
 
 ---
@@ -188,7 +188,7 @@ Mode affects nmap timing flags, hydra thread counts, and tool aggressiveness acr
 
 ## The Sharingan Plan — Phase Architecture
 
-Dig Champs runs in four conceptual phases, automatically sequenced:
+Kitsunebi runs in four conceptual phases, automatically sequenced:
 
 ### Phase 1 — Looking (Recon)
 
@@ -275,13 +275,13 @@ Terminal phases (`vulnreport`, `artifacts`) are always pinned to the end regardl
 Every run creates a session directory at:
 
 ```
-~/.dc_sessions/<target>_<timestamp>/
+~/.kb_sessions/<target>_<timestamp>/
 ```
 
 Each phase writes a `.done_<phase>` marker when complete. If a run is interrupted, resume it with:
 
 ```bash
-python3 dig_champs.py --resume ~/.dc_sessions/192.168.1.10_20260314_143022
+python3 kitsunebi.py --resume ~/.kb_sessions/192.168.1.10_20260314_143022
 ```
 
 Completed phases are skipped and their cached results are loaded. Only incomplete phases re-run. This means you can safely Ctrl-C and resume without repeating noisy scans.
@@ -296,7 +296,7 @@ Set your API key before running:
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
-python3 dig_champs.py -t <target>
+python3 kitsunebi.py -t <target>
 ```
 
 Claude features (all optional, tool runs fully without them):
@@ -313,7 +313,7 @@ If the API key is not set, or if `--offline` is active, or if the `anthropic` pa
 
 ## Output Files
 
-All output lands in the session directory (`~/.dc_sessions/<target>_<ts>/`):
+All output lands in the session directory (`~/.kb_sessions/<target>_<ts>/`):
 
 | File | Contents |
 | --- | --- |
@@ -341,7 +341,7 @@ A final JSON + Markdown report is also written to the home directory:
 Supply a wordlist of credentials to try during the cred phase:
 
 ```bash
-python3 dig_champs.py -t <target> --loot my_creds.txt
+python3 kitsunebi.py -t <target> --loot my_creds.txt
 ```
 
 Format — one credential pair per line:
@@ -363,7 +363,7 @@ These apply when using the tool on an operator machine shared with others, or wh
 - **Credential display** — cracked passwords are shown as `[REDACTED]` in terminal output. Full credentials are stored only in `cred_results.json` (permissions: 600).
 - **Subprocess credential passing** — passwords are never passed as command-line arguments. sshpass uses the `SSHPASS` environment variable (`-e` flag); smbclient uses the `PASSWD` environment variable; FTP curl calls use a temp `.netrc` file (600 permissions, deleted after use).
 - **API key safety** — `ANTHROPIC_API_KEY` is read from the environment and never logged. Authentication errors from the Anthropic SDK print only the exception type, not the message body.
-- **Session directory permissions** — `~/.dc_sessions/` and all session subdirectories are created with `700` permissions (explicit chmod to override process umask).
+- **Session directory permissions** — `~/.kb_sessions/` and all session subdirectories are created with `700` permissions (explicit chmod to override process umask).
 
 ---
 
@@ -371,13 +371,13 @@ These apply when using the tool on an operator machine shared with others, or wh
 
 | Path | Purpose |
 | --- | --- |
-| `dig_champs.py` | Main framework — all phases, entry point |
-| `_dc_http.py` | stdlib drop-in for `requests` (air-gapped fallback) |
-| `_dc_rich.py` | stdlib drop-in for `rich` (air-gapped fallback) |
+| `kitsunebi.py` | Main framework — all phases, entry point |
+| `_kb_http.py` | stdlib drop-in for `requests` (air-gapped fallback) |
+| `_kb_rich.py` | stdlib drop-in for `rich` (air-gapped fallback) |
 | `build_vendor.py` | Pre-download deps into `_vendor/` for offline use |
-| `wan_si_tong/` | Attack methodology library — 65+ techniques, OS routing, path designer, engagement tracker |
-| `modules/dig_champs_mini.py` | Stage 1 only (recon, no creds/exploit) |
-| `modules/dg_creds.py` | Standalone credential attack module |
-| `modules/dg_artifacts.py` | Standalone CVE artifact analyzer |
-| `modules/dg_vulnreport.py` | Standalone vuln ranking tool |
-| `modules/dg_auditor.py` | Scan auditor (in development) |
+| `wan_shi_tong/` | Attack methodology library — 65+ techniques, OS routing, path designer, engagement tracker |
+| `modules/kitsunebi_mini.py` | Stage 1 only (recon, no creds/exploit) |
+| `modules/kb_creds.py` | Standalone credential attack module |
+| `modules/kb_artifacts.py` | Standalone CVE artifact analyzer |
+| `modules/kb_vulnreport.py` | Standalone vuln ranking tool |
+| `modules/kb_auditor.py` | Scan auditor (in development) |

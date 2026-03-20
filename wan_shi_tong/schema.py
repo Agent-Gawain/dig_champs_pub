@@ -1,7 +1,7 @@
 """
 schema.py — Methodology dataclass and shared constants.
 
-All other wan_si_tong modules import from here; nothing in this file
+All other wan_shi_tong modules import from here; nothing in this file
 imports from elsewhere in the package (no circular dependencies).
 """
 
@@ -64,7 +64,7 @@ CATEGORIES: dict[str, str] = {
     "exfil_prep":       "Exfiltration Preparation",
 }
 
-# ── Phase constants (maps to dig_champs stage names) ─────────────────────────
+# ── Phase constants (maps to kitsunebi stage names) ─────────────────────────
 
 PHASES: dict[str, str] = {
     "looking":          "Stage 1 — Initial Recon",

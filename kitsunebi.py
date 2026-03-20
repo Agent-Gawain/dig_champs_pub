@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-dig_champs.py — Full-spectrum recon & post-exploitation CLI
+kitsunebi.py — Full-spectrum recon & post-exploitation CLI
 
 Author:           Danielle Grayson
 Created:          2026-03-16
@@ -22,8 +22,8 @@ Sections:
   13 Scan Trajectory       machine log · human narrative · audit diff
   14 Main Orchestrator
 
-Usage (interactive):   python3 dig_champs.py
-Usage (argparse):      python3 dig_champs.py -t <target> [options]
+Usage (interactive):   python3 kitsunebi.py
+Usage (argparse):      python3 kitsunebi.py -t <target> [options]
 
 Requires system tools: nmap, nikto, enum4linux, whatweb, dnsrecon
 Requires pip packages: requests rich anthropic
@@ -73,14 +73,14 @@ try:
 except ImportError:
     try:
         sys.path.insert(0, _HERE)
-        import _dc_http as requests            # type: ignore[no-redef]
-        from _dc_rich import Console, Panel, Table, box  # type: ignore[no-redef]
+        import _kb_http as requests            # type: ignore[no-redef]
+        from _kb_rich import Console, Panel, Table, box  # type: ignore[no-redef]
     except ImportError:
         sys.exit(
             "[!] Missing deps. Options:\n"
             "    1) pip install requests rich\n"
             "    2) python3 build_vendor.py    (populates _vendor/ for air-gapped use)\n"
-            "    3) ensure _dc_http.py and _dc_rich.py are alongside this script"
+            "    3) ensure _kb_http.py and _kb_rich.py are alongside this script"
         )
 
 try:
@@ -89,10 +89,10 @@ except ImportError:
     anthropic = None  # type: ignore  # Claude features disabled if not installed
 
 try:
-    from wan_si_tong import collate_findings as _wst_collate
-    from wan_si_tong import TrajectoryPathDesigner as _WstPathDesigner
-    from wan_si_tong import EngagementTracker as _WstTracker
-    from wan_si_tong import OSRouter as _WstRouter
+    from wan_shi_tong import collate_findings as _wst_collate
+    from wan_shi_tong import TrajectoryPathDesigner as _WstPathDesigner
+    from wan_shi_tong import EngagementTracker as _WstTracker
+    from wan_shi_tong import OSRouter as _WstRouter
     _WST_AVAILABLE = True
 except ImportError:
     _WST_AVAILABLE = False
@@ -136,7 +136,7 @@ def _detect_internet(timeout: float = 2.0) -> bool:
 # this). Data flows forward only — no tier reads from a tier that comes after it.
 #
 # ┌─────────────────────────────────────────────────────────────────┐
-# │  TIER 0 — PRE-SCAN (wan_si_tong + TrajectoryPathDesigner)       │
+# │  TIER 0 — PRE-SCAN (wan_shi_tong + TrajectoryPathDesigner)       │
 # │  Sets the initial phase_queue from nmap findings.               │
 # │  Currently: hardcoded queue; PathDesigner is a future stub.     │
 # └──────────────────────────┬──────────────────────────────────────┘
@@ -159,19 +159,19 @@ def _detect_internet(timeout: float = 2.0) -> bool:
 #                            ▼
 # ┌─────────────────────────────────────────────────────────────────┐
 # │  TIER 3 — POST-SCAN ARTIFACTS (terminal, no feedback to scan)   │
-# │  save_report → narrative → audit diff → wan_si_tong post-scan.  │
+# │  save_report → narrative → audit diff → wan_shi_tong post-scan.  │
 # │  These run after the loop and cannot affect the queue.          │
 # └──────────────────────────┬──────────────────────────────────────┘
 #                            │ <sdir>/ artifacts written (read-only after)
 #                            ▼
 # ┌─────────────────────────────────────────────────────────────────┐
-# │  TIER 4 — REVIEW (dg_auditor — completely separate process)     │
+# │  TIER 4 — REVIEW (kb_auditor — completely separate process)     │
 # │  Reads <sdir>/ artifacts. Never writes back. No feedback loop.  │
 # └─────────────────────────────────────────────────────────────────┘
 #
 # Authority table:
 #   Tier  Mechanism                  Scope            Authority
-#   0     wan_si_tong + PathDesigner Full queue        Sets initial order
+#   0     wan_shi_tong + PathDesigner Full queue        Sets initial order
 #   1     claude_strategic_advisor   Scannable only    Overwrites Tier 0 once
 #   2     live_adapt_rules           Remaining only    Pull-forward only
 #   —     Operator --no-X flags      Any phase         Veto over all tiers
@@ -190,7 +190,7 @@ def _detect_internet(timeout: float = 2.0) -> bool:
 #   save_session_meta()      — writes session.json to <sdir>/ at scan start
 #   _phase_sleep(delay, p)   — inter-phase sleep (mode-dependent, respects --delay)
 #
-# Session directory layout: ~/.dc_sessions/<target>_<ts>/
+# Session directory layout: ~/.kb_sessions/<target>_<ts>/
 #   session.json             — scan args + start timestamp
 #   .done_<phase>            — existence = phase complete; delete to force re-run
 #   <phase>_<name>.txt/json  — per-phase raw output and cached results
@@ -293,7 +293,7 @@ def session_dir(target: str, resume_path: str | None = None) -> str:
     """
     Return (and create) a stable per-target session directory.
     If resume_path is given, validate it and return it directly.
-    Otherwise create a new timestamped dir under ~/.dc_sessions/.
+    Otherwise create a new timestamped dir under ~/.kb_sessions/.
     On creation, write session.json so --resume can replay args.
     """
     if resume_path:
@@ -313,7 +313,7 @@ def session_dir(target: str, resume_path: str | None = None) -> str:
             except Exception:
                 pass
         return str(p)
-    base = Path.home() / ".dc_sessions"
+    base = Path.home() / ".kb_sessions"
     base.mkdir(mode=0o700, exist_ok=True)
     ts   = datetime.now().strftime("%Y%m%d_%H%M%S")
     sdir = base / f"{target}_{ts}"
@@ -352,7 +352,7 @@ def load_phase(sdir: str, filename: str) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SECTION 2 — RECON SCANS  (from dig_champs_mini)
+# SECTION 2 — RECON SCANS  (from kitsunebi_mini)
 # ══════════════════════════════════════════════════════════════════════════════
 #
 # Static recon phases — run once in fixed order before the dynamic queue.
@@ -928,7 +928,7 @@ def fetch_cve(cve_id: str) -> dict | None:
     try:
         r = requests.get(
             url, params={"cveId": cve_id}, timeout=12,
-            headers={"User-Agent": "dig_champs/1.0"}
+            headers={"User-Agent": "kitsunebi/1.0"}
         )
         r.raise_for_status()
         vulns = r.json().get("vulnerabilities", [])
@@ -1252,7 +1252,7 @@ def http_get(url: str, params=None, retries: int = 3, delay: float = 1.5):
         try:
             r = requests.get(
                 url, params=params, timeout=12,
-                headers={"User-Agent": "dig_champs/1.0"},
+                headers={"User-Agent": "kitsunebi/1.0"},
             )
             if r.status_code == 429:
                 time.sleep(delay * (attempt + 1))
@@ -1348,7 +1348,7 @@ def query_osv(keyword: str) -> list[dict]:
             "https://api.osv.dev/v1/query",
             json={"query": {"package": {"name": keyword}}},
             timeout=10,
-            headers={"User-Agent": "dig_champs/1.0"},
+            headers={"User-Agent": "kitsunebi/1.0"},
         )
         r.raise_for_status()
         vulns = r.json().get("vulns", [])
@@ -1377,7 +1377,7 @@ def query_govuln(keyword: str) -> list[dict]:
     try:
         r = requests.get(
             "https://vuln.go.dev/index/vulns.json", timeout=10,
-            headers={"User-Agent": "dig_champs/1.0"},
+            headers={"User-Agent": "kitsunebi/1.0"},
         )
         r.raise_for_status()
         all_vulns = r.json()
@@ -2513,7 +2513,7 @@ def _extract_postauth_findings(postauth_findings: list[dict]) -> list[dict]:
 
     Bridges the rich SSH enum output (sudo rules, SUID bins, kernel version,
     running processes, network interfaces, user accounts, etc.) into
-    trigger-matchable finding dicts for the wan_si_tong collator.
+    trigger-matchable finding dicts for the wan_shi_tong collator.
 
     Called after postauth completes — both fresh runs and cached resumes —
     so the live_adapt step and any subsequent WST re-scoring sees this data.
@@ -2899,7 +2899,7 @@ def _make_vuln_finding(port: str, script: str, buf: list[str]) -> dict:
 #   print_final_summary()    — rich terminal table grouped by severity; always runs
 #
 # Takes input from: full findings list (all phases)
-# Feeds into: <sdir>/ report files (read by dg_auditor — Tier 4, read-only)
+# Feeds into: <sdir>/ report files (read by kb_auditor — Tier 4, read-only)
 
 def _sev_label(f: dict) -> str:
     """Assign a display severity to a finding for the summary table."""
@@ -3048,7 +3048,7 @@ def save_report(findings: list[dict], target: str, sdir: str) -> str:
     )
 
     lines = [
-        f"# dig_champs Report — {target}",
+        f"# kitsunebi Report — {target}",
         f"**Generated:** {ts}  |  **Findings:** {len(findings)}\n",
         "---\n",
         "## Summary\n",
@@ -3449,7 +3449,7 @@ def claude_strategic_advisor(
 #     Pass 4: timing anomalies (duration > mean+2σ, or 0s with cached=False)
 #     Pass 5: decision chain gaps (adapt events not mentioned near a decision keyword)
 #
-# Read by: dg_auditor.py (Tier 4) — strictly read-only, no writes back to <sdir>/
+# Read by: kb_auditor.py (Tier 4) — strictly read-only, no writes back to <sdir>/
 
 def _finding_id(f: dict) -> str:
     """Deterministic 8-char ID for a finding dict."""
@@ -3707,7 +3707,7 @@ def _narrative_template(traj: dict, target: str) -> str:
         f"Duration: {traj.get('total_duration_s', '?')}s*",
         "",
         "## Overview",
-        f"An automated assessment was conducted against **{target}** using dig_champs "
+        f"An automated assessment was conducted against **{target}** using kitsunebi "
         f"in mode {traj.get('mode')} "
         f"({_MODE_LABELS.get(traj.get('mode', 2), 'Unknown')}). "
         f"Phases executed: "
@@ -3963,8 +3963,8 @@ def compute_audit_diff(
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="dig_champs",
-        description="dig_champs — full-spectrum recon & post-exploitation CLI",
+        prog="kitsunebi",
+        description="kitsunebi — full-spectrum recon & post-exploitation CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 MODES
@@ -3993,13 +3993,13 @@ SESSION / RESUME
   --resume PATH   resume from an existing session directory
 
 EXAMPLES
-  python3 dig_champs.py -t 10.10.10.5 -m 3
-  python3 dig_champs.py -t vuln.example.com -m 2 --loot /tmp/creds.txt
-  python3 dig_champs.py -t 10.0.0.1 -m 4 --confirm-boss
-  python3 dig_champs.py -t 10.0.0.1 -m 3 --ports 80,443,8080-8090 --inter-phase-delay 5
-  python3 dig_champs.py -t 10.0.0.1 -m 3 --wordlist /usr/share/wordlists/dirb/common.txt
-  python3 dig_champs.py -t 10.0.0.1 -m 3 --resume ~/.dc_sessions/10.0.0.1_20240101_120000
-  python3 dig_champs.py  (fully interactive)
+  python3 kitsunebi.py -t 10.10.10.5 -m 3
+  python3 kitsunebi.py -t vuln.example.com -m 2 --loot /tmp/creds.txt
+  python3 kitsunebi.py -t 10.0.0.1 -m 4 --confirm-boss
+  python3 kitsunebi.py -t 10.0.0.1 -m 3 --ports 80,443,8080-8090 --inter-phase-delay 5
+  python3 kitsunebi.py -t 10.0.0.1 -m 3 --wordlist /usr/share/wordlists/dirb/common.txt
+  python3 kitsunebi.py -t 10.0.0.1 -m 3 --resume ~/.kb_sessions/10.0.0.1_20240101_120000
+  python3 kitsunebi.py  (fully interactive)
 """,
     )
     p.add_argument("-t", "--target",            help="Target IP address or hostname")
@@ -4042,13 +4042,13 @@ EXAMPLES
                    help="Resume from an existing session directory")
     p.add_argument("--operator-key",            metavar="PATH",
                    help="Ed25519 operator private key for session signing "
-                        "(or set DIG_CHAMPS_OPERATOR_KEY env var)")
+                        "(or set KITSUNEBI_OPERATOR_KEY env var)")
     p.add_argument("--operator-cert",           metavar="PATH",
                    help="Operator certificate JSON issued by the authority "
-                        "(or set DIG_CHAMPS_OPERATOR_CERT env var)")
+                        "(or set KITSUNEBI_OPERATOR_CERT env var)")
     p.add_argument("--enterprise-cert",         metavar="PATH",
                    help="Enterprise authority certificate JSON — required for "
-                        "enterprise-tier operators (or set DIG_CHAMPS_ENTERPRISE_CERT env var)")
+                        "enterprise-tier operators (or set KITSUNEBI_ENTERPRISE_CERT env var)")
     return p
 
 
@@ -4712,7 +4712,7 @@ def main():
 
     # ══════════════════════════════════════════════════════════════════════
     # BUILD DYNAMIC PHASE QUEUE  (post-creds phases, live-adapted)
-    # Tier 0: wan_si_tong Path Designer pre-orders the queue based on
+    # Tier 0: wan_shi_tong Path Designer pre-orders the queue based on
     # methodology scoring + historical outcomes before Tier 1 (Claude advisor).
     # ══════════════════════════════════════════════════════════════════════
 
@@ -4983,13 +4983,13 @@ def main():
     compute_audit_diff(sdir, target, _traj_path, _narr_path)
 
     # ── Auto-sign session if operator credentials are configured ──────────
-    _op_key   = getattr(args, "operator_key",    None) or os.environ.get("DIG_CHAMPS_OPERATOR_KEY")
-    _op_cert  = getattr(args, "operator_cert",   None) or os.environ.get("DIG_CHAMPS_OPERATOR_CERT")
-    _ent_cert = getattr(args, "enterprise_cert", None) or os.environ.get("DIG_CHAMPS_ENTERPRISE_CERT")
+    _op_key   = getattr(args, "operator_key",    None) or os.environ.get("KITSUNEBI_OPERATOR_KEY")
+    _op_cert  = getattr(args, "operator_cert",   None) or os.environ.get("KITSUNEBI_OPERATOR_CERT")
+    _ent_cert = getattr(args, "enterprise_cert", None) or os.environ.get("KITSUNEBI_ENTERPRISE_CERT")
     if _op_key and _op_cert:
         try:
             sys.path.insert(0, _HERE)
-            from dig_champs_audit import sign_session as _sign_session  # type: ignore
+            from kitsunebi_audit import sign_session as _sign_session  # type: ignore
             _fp = _sign_session(sdir, _op_key, _op_cert, _ent_cert or None)
             console.print(
                 f"[bold green][+] Session signed.[/bold green]  "
@@ -5004,7 +5004,7 @@ def main():
         )
 
     console.print(
-        f"\n[bold green]✓ dig_champs complete.[/bold green]  "
+        f"\n[bold green]✓ kitsunebi complete.[/bold green]  "
         f"[dim]JSON: {report_path}  |  Session: {sdir}[/dim]\n"
     )
 

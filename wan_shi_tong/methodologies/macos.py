@@ -7,8 +7,8 @@ TCC bypass, persistence, and post-exploitation techniques.
 Registered with os_tags=["macos"].
 """
 
-from wan_si_tong.registry import MethodologyRegistry
-from wan_si_tong.schema import Methodology
+from wan_shi_tong.registry import MethodologyRegistry
+from wan_shi_tong.schema import Methodology
 
 _R = MethodologyRegistry.get()
 

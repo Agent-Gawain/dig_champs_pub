@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git mv:*)",
+      "Bash(py --version)",
+      "Bash(/c/Users/dania/AppData/Local/Microsoft/WindowsApps/python3 -c \":*)",
+      "Bash(py -3 -c \"print\\(''hello''\\)\")",
+      "Bash(command -v python3.11)",
+      "Bash(command -v python3.12)",
+      "Bash(command -v python3.9)",
+      "Bash(find . -name *.py ! -path ./.git/* ! -path ./__pycache__/*)",
+      "Read(//tmp/**)",
+      "Bash(grep -r \"dig_champs\\\\|wan_si_tong\\\\|DIG_CHAMPS\\\\|_dc_http\\\\|_dc_rich\\\\|dg_auditor\\\\|dg_creds\\\\|dg_vulnreport\\\\|dg_artifacts\\\\|dig_champs_mini\\\\|dc_sessions\" . --include=*.py ! -path ./.git/*)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(sed -i -e 's/dig_champs_mini/kitsunebi_mini/g' -e 's/dg_artifacts/kb_artifacts/g' -e 's/dg_auditor/kb_auditor/g' -e 's/dg_creds/kb_creds/g' -e 's/dg_vulnreport/kb_vulnreport/g' -e 's/_dc_http/_kb_http/g' -e 's/_dc_rich/_kb_rich/g' -e 's/wan_si_tong/wan_shi_tong/g' -e 's/DIG_CHAMPS/KITSUNEBI/g' -e 's/\\\\.dc_sessions/.kb_sessions/g' -e 's/dc_sessions/kb_sessions/g' -e 's/dig_champs/kitsunebi/g' \"$f\")",
+      "Bash(done)",
+      "Bash(grep -rn \"dig_champs\\\\|wan_si_tong\\\\|_dc_http\\\\|_dc_rich\\\\|dg_auditor\\\\|dg_creds\\\\|dg_vulnreport\\\\|dg_artifacts\\\\|dig_champs_mini\\\\|\\\\.dc_sessions\\\\b\\\\|DIG_CHAMPS\" . --include=*.py --include=*.md --include=*.txt ! -path ./.git/*)"
+    ]
+  }
+}
