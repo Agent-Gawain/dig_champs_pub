@@ -1,7 +1,27 @@
-# Digital Ghost — KITSUNEBI
+# KITSUNEBI
 
-Red-team recon and post-exploitation framework. Automated multi-phase attack surface mapping with live adaptive phase sequencing and optional Claude-powered analysis.
+Kitsunebi is a modular, full-spectrum penetration testing framework built in Python. 
+It orchestrates multi-phase offensive engagements — from initial recon through 
+credential attacks, CVE analysis, and post-auth enumeration — with a live adaptive 
+phase sequencing engine that dynamically reorders execution based on what it finds 
+mid-engagement.
 
+Built in six weeks as a first Python project. ~11,000 lines across the full suite.
+
+**Key design features:**
+- Four-tier authority model enforcing strict data-flow contracts to prevent 
+  privilege escalation feedback loops
+- Three-tier air-gapped deployment system (standard, vendored, cold-drop) 
+  for offline engagement boxes  
+- Optional Claude AI integration for strategic phase reordering and CVE artifact 
+  analysis, with clean offline degradation
+- Session persistence with resume capability — completed phases are never re-run
+- Hard operational ceilings at credential cracking and post-auth enumeration 
+  by design — a deliberate ethical boundary, not a missing feature
+
+The public repository contains the full framework. The paired cognitive engine 
+(Wan Shi Tong) — which maintains engagement history and generates statistically 
+informed attack path recommendations — is in active private development.
 
 > ⚠️ **AUTHORIZED USE ONLY**
 >
